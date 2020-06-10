@@ -1,0 +1,53 @@
+Sub FontColor()
+'
+'
+
+'
+    '===== NVT03499 XY LIN Revised =====
+    '----------------------------------------------------------------
+    'Search for FLCTL Column & Row
+    Dim FLCTL As Integer
+    Dim FLCTL_SearchRow As Integer
+    Dim FLCTL_SearchCol As Integer
+    
+    For FLCTL_SearchRow = 1 To 40
+        For FLCTL_SearchCol = 1 To 500
+            If Cells(FLCTL_SearchRow, FLCTL_SearchCol).Value = "FLCTL" Then
+                'MsgBox "Row = " & FLCTL_SearchRow & " ,Column" & FLCTL_SearchCol
+                FLCTL = FLCTL_SearchCol
+                Exit For
+            End If
+        Next FLCTL_SearchCol
+    Next FLCTL_SearchRow
+    '----------------------------------------------------------------
+    
+    '----------------------------------------------------------------
+    'Search the row of pattern start and end row number
+    Dim StartRow As Integer
+    Dim EndRow As Integer
+    Dim SearchRow As Integer
+    'Set transfer Start & End point
+    StartRow = 0
+    EndRow = 0
+    For SearchRow = 1 To 1000
+        
+        If UCase(Cells(SearchRow, FLCTL).Value) = "S" Then
+            StartRow = SearchRow
+        'Else
+            'MsgBox "No Found FLCTL S"
+        End If
+        
+        If UCase(Cells(SearchRow, FLCTL).Value) = "E" Then
+            EndRow = SearchRow
+            SearchRow = 10000
+        'Else
+            'MsgBox "No Found FLCTL E"
+        End If
+    
+    Next SearchRow
+    
+    If StartRow = 0 Or EndRow = 0 Then
+        MsgBox "Please fill ""S"" and ""E"" at FLCTL column!"
+        Exit Sub
+    End If
+    Application.ScreenUpdating = False
