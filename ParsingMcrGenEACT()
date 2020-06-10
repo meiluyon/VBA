@@ -1,0 +1,144 @@
+
+Option Explicit
+
+
+
+Sub ParsingMcrGenEACT()
+
+    Dim FileHandle As Integer
+    Dim FileHandleSub As Integer
+    '===== NVT03499 XY LIN Revised =====
+    '----------------------------------------------------------------
+    'Search the row of pattern start and end row number
+    Dim StartRow As Integer
+    Dim EndRow As Integer
+    Dim SearchRow As Integer
+        
+    Dim FLCTL As Integer
+    Dim FLCTL_SearchRow As Integer
+    Dim FLCTL_SearchCol As Integer
+    Dim Comment As String
+    Dim Instruction As String
+    Dim Address As String
+    Dim ParaList As String
+    Application.DisplayAlerts = False
+    Application.ScreenUpdating = False
+    'Search for FLCTL Column
+    For FLCTL_SearchRow = 1 To 30
+        For FLCTL_SearchCol = 1 To 100
+            If Cells(FLCTL_SearchRow, FLCTL_SearchCol).Value = "FLCTL" Then
+                'MsgBox "Row = " & FLCTL_SearchRow & " ,Column" & FLCTL_SearchCol
+                FLCTL = FLCTL_SearchCol
+                Exit For
+            'Else
+            'MsgBox ("Can't Find FLCTL")
+            End If
+        Next FLCTL_SearchCol
+    Next FLCTL_SearchRow
+    
+    
+
+    'eACT Fromat needs to match flowing sequence:
+    'FLCTL, Comment, Instruction, P1, P2
+    StartRow = 20
+    Comment = FLCTL + 1
+    Instruction = FLCTL + 2
+    'P1
+    'Address = Mid(Cells(Row, FLCTL + 3).Value, 3, 2)
+    'P2
+    'ParaList = Cells(Row, FLCTL + 4).Value
+    
+    
+    
+    
+    Range(Cells(10, FLCTL), Cells(5000, FLCTL + 15)).Select
+    Selection.ClearContents
+    'Selection.Borders(xlDiagonalDown).LineStyle = xlNone
+    'Selection.Borders(xlDiagonalUp).LineStyle = xlNone
+    'Selection.Borders(xlEdgeLeft).LineStyle = xlNone
+    'Selection.Borders(xlEdgeRight).LineStyle = xlNone
+    'Selection.Borders(xlInsideVertical).LineStyle = xlNone
+    'Selection.Borders(xlInsideHorizontal).LineStyle = xlNone
+     'With Selection.Interior
+     '   .Pattern = xlNone
+     '   .TintAndShade = 0
+     '   .PatternTintAndShade = 0
+    'End With
+    
+    
+    
+    
+    
+    Dim FileContent, b, c, vTotalCnt%, i%, j%, hTotalCnt%, CmtOutCMD
+    Dim FileName As Variant
+    'Read .mcr
+    FileName = Application.GetOpenFilename("TEXT Files (*.mcr),*.mcr")
+    Open FileName For Input As #1
+    FileContent = Split(StrConv(InputB(LOF(1), 1), vbUnicode), vbCrLf)
+    Close #1
+    
+    
+    vTotalCnt = UBound(FileContent)
+    'MsgBox (FileContent(1))
+    For i = 0 To vTotalCnt
+        If i = 1 Then
+            Cells(StartRow, FLCTL) = "S"
+    
+        ElseIf i = vTotalCnt Then
+            Cells(StartRow + vTotalCnt, FLCTL) = "E"
+        
+        End If
+        
+        'To Recongnize Comment Out CMD
+        If Left(FileContent(i), 2) = "//" Then
+            b = FileContent(i)
+            CmtOutCMD = 1
+        
+        'Normal CMD
+        Else
+            b = Split(FileContent(i), " ")
+            'b = Split(Split(FileContent(i), " "), ",")
+            'c = Mid(Split(FileContent(i), " ")(1), 6, Len(Split(FileContent(i), " ")(1)))
+            hTotalCnt = UBound(b)
+            CmtOutCMD = 0
+        End If
+        
+        
+       'Print Commnet OUT CMD
+        If CmtOutCMD = 1 Then
+            Cells(StartRow + i + 1, Instruction - 1) = b
+       
+       'Print Normal CMD
+       Else
+           For j = 0 To hTotalCnt
+                    Cells(StartRow + i, Instruction + j) = b(j)
+                    'Cells(StartRow + i, Instruction + j) = b
+                
+                'If j = 0 Then
+                'Cells(StartRow + i, Instruction + j) = Left(b(j), 4)
+                'Else
+                'Cells(StartRow + i, Instruction + j) = Mid(b(j), 6, Len(b(j)))
+                'End If
+    
+           Next
+       End If
+    Next
+    
+    Range(Cells(StartRow, Instruction + 1), Cells(2000, Instruction + 1)).Select
+    Selection.TextToColumns Destination:=Cells(StartRow, Instruction + 1), DataType:=xlFixedWidth, _
+    FieldInfo:=Array(Array(0, 1), Array(5, 1)), TrailingMinusNumbers:=True
+    
+    Range(Cells(StartRow, FLCTL + 3), Cells(2000, FLCTL + 3)).Select
+    Selection.Replace What:=",", Replacement:="", LookAt:=xlPart, _
+    SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+    ReplaceFormat:=False
+    
+    
+
+    Call FontColor
+    
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    
+        
+End Sub
