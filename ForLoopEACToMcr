@@ -1,0 +1,145 @@
+Attribute VB_Name = "Module1"
+
+
+
+Sub CaseGenMCR()      '將指令轉換成Cmodel input setting txt
+
+
+
+    Dim mStartRow As Integer
+    Dim mEndRow As Integer
+    Dim Path As String
+    Dim Drive As String
+    Dim FileName As String
+    Dim FileHandle As Integer
+    Dim Page As Integer
+    Dim SetPageValue As Integer
+    Dim CaseSel As String
+    Dim CaseStart As Integer
+    Dim CaseLoop As Integer
+    Dim CurrentCase As String
+        '----------------------------------------------------------------
+    'Search for FLCTL Column & Row
+    Dim FLCTL As Integer
+    Dim FLCTL_SearchRow As Integer
+    Dim FLCTL_SearchCol As Integer
+    
+    'Search for FLCTL Column
+    For FLCTL_SearchRow = 1 To 30
+        For FLCTL_SearchCol = 1 To 2000
+            If Cells(FLCTL_SearchRow, FLCTL_SearchCol).Value = "FLCTL" Then
+                'MsgBox "Row = " & FLCTL_SearchRow & " ,Column" & FLCTL_SearchCol
+                FLCTL = FLCTL_SearchCol
+                Exit For
+            End If
+        Next FLCTL_SearchCol
+    Next FLCTL_SearchRow
+    '----------------------------------------------------------------
+    'Flow Control Column #
+    FLCTL_Col = FLCTL
+    Path = Cells(2, FLCTL_Col)
+    Drive = Left(Path, 1)
+    ChDrive (Drive)
+    ChDir (Path)
+    CaseStart = Cells(39, FLCTL_Col + 4)
+    CaseLoop = Cells(40, FLCTL_Col + 3)
+    CaseEnd = CaseStart + CaseLoop - 1
+    
+    
+    mStartRow = 0
+    mEndRow = 0
+    For rSearch = 10 To 2000
+        If Cells(rSearch, FLCTL_Col) = "S" Then
+            mStartRow = rSearch
+        ElseIf Cells(rSearch, FLCTL_Col) = "E" Then
+            mEndRow = rSearch
+        End If
+    Next rSearch
+
+    If mStartRow = 0 Or mEndRow = 0 Then
+        MsgBox "請於FLCTL欄位填上 ""S"" 與 ""E"" !"
+        Exit Sub
+    End If
+                                                                                                                                                            
+
+    
+    'MsgBox CurrentCase
+    
+    
+For CaseRoll = CaseStart To CaseEnd
+
+    Cells(43, FLCTL_Col + 5) = CaseRoll
+    
+    CurrentCase = Cells(43, FLCTL_Col + 5)
+    
+    CaseSel = Cells(43, FLCTL_Col + 5)
+    'FileName = Application.GetSaveAsFilename("RMSPattern_MIPI.v", "TEXT Files (*.v),*.v") '開啟Save File Box Dialog
+    'FileName = "G:\MD\NVT03499\0427\DBI_" & CaseSel & ".txt"
+    FileName = Path & "DBI_Case_" & CaseSel & ".mcr"
+    
+                                                                                                                                                            
+    FileHandle = FreeFile
+    Open FileName For Output Access Write As FileHandle         '開啟檔案
+    
+    'Print #FileHandle, "ccmon"
+    
+            For Row = mStartRow To mEndRow 'row
+                
+                Dim Comment
+                Dim ins
+                Dim p1
+                Dim p2
+        
+                Comment = Cells(Row, FLCTL_Col + 1)
+                ins = (Cells(Row, FLCTL_Col + 2)) 'instruction
+                p1 = (Cells(Row, FLCTL_Col + 3))  'P1
+                p2 = (Cells(Row, FLCTL_Col + 4))  'P2
+         
+                If (Comment <> "") Then
+                        If (UCase(ins) = "REGW" Or UCase(ins) = "REGR") Then
+                        
+                                If (p2 <> "") Then
+                                    SP1 = Split(p1, ",")
+                                    Print #FileHandle,
+                                    Print #FileHandle, "// " & Comment
+                                    Print #FileHandle, ins & " " & SP1(0) & "," & p2
+                                Else
+                                    SP1 = Split(p1, ",")
+                                    Print #FileHandle,
+                                    'Print #FileHandle, "// " & Comment
+                                    Print #FileHandle, ins & " " & SP1(0)
+                                End If
+
+                    
+                        'ElseIf (UCase(ins) = "VIDEOSTOP" Or UCase(ins) = "DELAY" Or UCase(ins) = "HWRST" Or UCase(ins) = "SETPIN" Or UCase(ins) = "BMPLD" Or UCase(ins) = "GRAMW" Or UCase(ins) = "SETPIN") Then
+                        ElseIf (UCase(ins) = "VIDEOSTOP" Or UCase(ins) = "DELAY" Or UCase(ins) = "BMPLD" Or UCase(ins) = "GRAMW") Then
+                             'Print #FileHandle,
+                                Print #FileHandle, ins & " " & p1
+                    
+                    
+                        Else
+                                Print #FileHandle, "// " & Comment
+                        End If
+                Else
+                End If
+                
+            Next Row
+
+
+    'Print #FileHandle, "ccmoff"
+    'Print #FileHandle, "ccmrun"
+    Print #FileHandle, "//End"
+    Close #FileHandle
+Next CaseRoll
+       
+    
+
+End Sub
+
+
+
+
+
+
+
+
